@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
       return exit_command_arg;
 
     case CMD_UNKNOWN:
-      printf("%s: command not found\n", buf);
+      printf("%s: command not found", buf);
 
     case ECHO:
       while (*parsed_command != NULL) {
