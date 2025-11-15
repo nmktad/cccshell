@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
       }
 
     case CMD_UNKNOWN:
-      printf("%s: command not found", buf);
+      printf("%s: command not found\n", buf);
       break;
 
     case ECHO:
