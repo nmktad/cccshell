@@ -2,12 +2,35 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <unistd.h> // access()
 
 #define USER_INPUT_BUF_SIZE 256
 #define MAX_ARGS 32
 
 enum COMMAND { CMD_EXIT, CMD_ECHO, CMD_TYPE, CMD_UNKNOWN };
+
+int run_external(char **argv) {
+  pid_t pid = fork();
+  if (pid < 0) {
+    perror("fork");
+    return -1;
+  }
+
+  if (pid == 0) {
+    execvp(argv[0], argv);
+    perror("execvp");
+    _exit(127);
+  }
+
+  int status;
+  if (waitpid(pid, &status, 0) < 0) {
+    perror("waitpid");
+    return -1;
+  }
+
+  return status;
+}
 
 int parse(char *user_input, char **argv, int max_args) {
   int count = 0;
@@ -152,8 +175,16 @@ int main(void) {
 
     case CMD_UNKNOWN:
     default:
-      printf("%s: command not found\n", command);
-      break;
+      char path_buf[4096];
+      if (find_in_path(argv[0], path_buf, sizeof(path_buf))) {
+        int status = run_external(argv);
+        if (status == -1) {
+          printf("something went wrong");
+        }
+        break;
+      } else {
+        printf("%s: command not found\n", command);
+      }
     }
   }
 
