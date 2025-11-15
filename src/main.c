@@ -5,7 +5,7 @@
 #define USER_INPUT_BUF_SIZE 256
 #define MAX_ARGS 32
 
-enum COMMAND { EXIT, ECHO, CMD_UNKNOWN };
+enum COMMAND { EXIT, ECHO, TYPE, CMD_UNKNOWN };
 
 int parse(char *user_input, char **parsed_command) {
   int count = 0;
@@ -27,6 +27,9 @@ enum COMMAND get_command(char *cmd) {
 
   if (strcmp(cmd, "echo") == 0)
     return ECHO;
+
+  if (strcmp(cmd, "type") == 0)
+    return TYPE;
 
   return CMD_UNKNOWN;
 }
@@ -50,25 +53,41 @@ int main(int argc, char *argv[]) {
     int arg_num = parse(buf, parsed_command);
 
     enum COMMAND cmd = get_command(parsed_command[0]);
+    char *command = parsed_command[0];
     parsed_command += 1;
 
     switch (cmd) {
-    case EXIT:
-      if (arg_num > 2) {
+    case TYPE:
+      if (arg_num != 2) {
         printf("Too many arguments passed for the command %s, expected %d "
                "arguments, have %d arguments\n",
-               buf, 2, arg_num);
+               command, 2, arg_num);
+      }
+      enum COMMAND check_given_cmd = get_command(parsed_command[0]);
+      if (check_given_cmd == CMD_UNKNOWN) {
+        printf("%s: not found\n", parsed_command[0]);
+      } else {
+        printf("%s is a shell builtin\n", parsed_command[0]);
+      }
+      break;
+
+    case EXIT:
+      if (arg_num != 2) {
+        printf("Too many arguments passed for the command %s, expected %d "
+               "arguments, have %d arguments\n",
+               command, 2, arg_num);
       }
 
       int exit_command_arg;
       if (sscanf(parsed_command[0], "%d", &exit_command_arg) != 1) {
-        printf("Invalid argument passed, expected number");
+        printf("Invalid argument passed, expected number\n");
+      } else {
+        return exit_command_arg;
       }
-
-      return exit_command_arg;
 
     case CMD_UNKNOWN:
       printf("%s: command not found", buf);
+      break;
 
     case ECHO:
       while (*parsed_command != NULL) {
@@ -76,6 +95,7 @@ int main(int argc, char *argv[]) {
         parsed_command += 1;
       }
       printf("\n");
+      break;
     }
   }
 }
