@@ -8,7 +8,7 @@
 #define USER_INPUT_BUF_SIZE 256
 #define MAX_ARGS 32
 
-enum COMMAND { CMD_EXIT, CMD_ECHO, CMD_TYPE, CMD_UNKNOWN, CMD_PWD };
+enum COMMAND { CMD_EXIT, CMD_ECHO, CMD_TYPE, CMD_UNKNOWN, CMD_PWD, CMD_CD };
 
 int run_external(char **argv) {
   pid_t pid = fork();
@@ -58,6 +58,8 @@ enum COMMAND get_command(const char *cmd) {
     return CMD_TYPE;
   if (strcmp(cmd, "pwd") == 0)
     return CMD_PWD;
+  if (strcmp(cmd, "cd") == 0)
+    return CMD_CD;
 
   return CMD_UNKNOWN;
 }
@@ -169,6 +171,18 @@ int main(void) {
       }
 
       return (int)code;
+    }
+
+    case CMD_CD: {
+      if (argc != 1) {
+        printf("%s: expected 1 argument, got %d\n", command, argc);
+        break;
+      }
+
+      if ((chdir(args[0])) != 0) {
+        printf("cd: %s: No such file or directory\n", args[0]);
+      }
+      break;
     }
 
     case CMD_ECHO: {
