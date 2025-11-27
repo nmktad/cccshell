@@ -174,14 +174,48 @@ int main(void) {
     }
 
     case CMD_CD: {
+      if (argc == 0) {
+        const char *home = getenv("HOME");
+        if (!home) {
+          fprintf(stderr, "cd: HOME not set\n");
+          break;
+        }
+        if (chdir(home) != 0) {
+          perror("cd");
+        }
+        break;
+      }
       if (argc != 1) {
         printf("%s: expected 1 argument, got %d\n", command, argc);
         break;
       }
 
-      if ((chdir(args[0])) != 0) {
-        printf("cd: %s: No such file or directory\n", args[0]);
+      const char *target = args[0];
+
+      char path[1024];
+
+      if (target[0] == '~') {
+        const char *home = getenv("HOME");
+        if (!home) {
+          fprintf(stderr, "cd: HOME not set\n");
+          break;
+        }
+
+        const char *suffix = target + 1; // skip '~'
+
+        if (snprintf(path, sizeof(path), "%s%s", home, suffix) >=
+            (int)sizeof(path)) {
+          fprintf(stderr, "cd: path too long\n");
+          break;
+        }
+
+        target = path;
       }
+
+      if (chdir(target) != 0) {
+        printf("cd: %s: No such file or directory\n", target);
+      }
+
       break;
     }
 
