@@ -30,7 +30,7 @@ int run_external(int argc, char **argv) {
     int j = 0;
 
     for (int i = 0; i < argc + 1; i++) {
-      if (strcmp(argv[i], ">") == 0) {
+      if (strcmp(argv[i], ">") == 0 || strcmp(argv[i], "1>") == 0) {
         if (i + 1 >= argc + 1) {
           fprintf(stderr, "syntax error: '>' with no file\n");
           free(new_args);
