@@ -9,7 +9,7 @@
 #define USER_INPUT_BUF_SIZE 256
 #define MAX_ARGS 32
 
-enum COMMAND { CMD_EXIT, CMD_ECHO, CMD_TYPE, CMD_UNKNOWN, CMD_PWD, CMD_CD };
+enum COMMAND { CMD_EXIT, CMD_TYPE, CMD_UNKNOWN, CMD_PWD, CMD_CD };
 
 int run_external(int argc, char **argv) {
   pid_t pid = fork();
@@ -99,8 +99,6 @@ enum COMMAND get_command(const char *cmd) {
 
   if (strcmp(cmd, "exit") == 0)
     return CMD_EXIT;
-  if (strcmp(cmd, "echo") == 0)
-    return CMD_ECHO;
   if (strcmp(cmd, "type") == 0)
     return CMD_TYPE;
   if (strcmp(cmd, "pwd") == 0)
@@ -266,16 +264,16 @@ int main(void) {
       break;
     }
 
-    case CMD_ECHO: {
-      for (int i = 0; i < argc; i++) {
-        printf("%s", args[i]);
-        if (i + 1 < argc) {
-          printf(" ");
-        }
-      }
-      printf("\n");
-      break;
-    }
+    // case CMD_ECHO: {
+    //   for (int i = 0; i < argc; i++) {
+    //     printf("%s", args[i]);
+    //     if (i + 1 < argc) {
+    //       printf(" ");
+    //     }
+    //   }
+    //   printf("\n");
+    //   break;
+    // }
     case CMD_UNKNOWN:
     default:
       char path_buf[4096];
