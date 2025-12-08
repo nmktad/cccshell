@@ -29,8 +29,8 @@ int run_external(int argc, char **argv) {
 
     int j = 0;
 
-    for (int i = 0; i < argc; i++) {
-      if (strcmp(argv[i], ">") == 0 || strcmp(argv[i], "1>") == 0) {
+    for (int i = 0; i < argc + 1; i++) {
+      if (strcmp(argv[i], ">") == 0) {
         if (i + 1 >= argc + 1) {
           fprintf(stderr, "syntax error: '>' with no file\n");
           free(new_args);
@@ -39,7 +39,6 @@ int run_external(int argc, char **argv) {
 
         outfile = argv[i + 1];
         i++;
-
       } else {
         new_args[j++] = argv[i];
       }
@@ -67,6 +66,7 @@ int run_external(int argc, char **argv) {
 
     execvp(new_args[0], new_args);
     perror("execvp");
+    free(new_args);
     _exit(127);
   }
 
