@@ -1,4 +1,5 @@
-#include <limits.h> // PATH_MAX (if available)
+#include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,15 +11,61 @@
 
 enum COMMAND { CMD_EXIT, CMD_ECHO, CMD_TYPE, CMD_UNKNOWN, CMD_PWD, CMD_CD };
 
-int run_external(char **argv) {
+int run_external(int argc, char **argv) {
   pid_t pid = fork();
   if (pid < 0) {
     perror("fork");
-    return -1;
+    return EXIT_FAILURE;
   }
 
   if (pid == 0) {
-    execvp(argv[0], argv);
+    char *outfile = NULL;
+
+    char **new_args = malloc(sizeof(char *) * (argc + 1));
+    if (!new_args) {
+      perror("malloc");
+      _exit(EXIT_FAILURE);
+    }
+
+    int j = 0;
+
+    for (int i = 0; i < argc; i++) {
+      if (strcmp(argv[i], ">") == 0 || strcmp(argv[i], "1>") == 0) {
+        if (i + 1 >= argc + 1) {
+          fprintf(stderr, "syntax error: '>' with no file\n");
+          free(new_args);
+          _exit(EXIT_FAILURE);
+        }
+
+        outfile = argv[i + 1];
+        i++;
+
+      } else {
+        new_args[j++] = argv[i];
+      }
+    }
+
+    new_args[j] = NULL;
+
+    if (outfile != NULL) {
+      int fd = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      if (fd < 0) {
+        perror("open");
+        free(new_args);
+        _exit(EXIT_FAILURE);
+      }
+
+      if (dup2(fd, STDOUT_FILENO) < 0) {
+        perror("dup2");
+        close(fd);
+        free(new_args);
+        _exit(EXIT_FAILURE);
+      }
+
+      close(fd);
+    }
+
+    execvp(new_args[0], new_args);
     perror("execvp");
     _exit(127);
   }
@@ -100,7 +147,7 @@ int find_in_path(const char *name, char *out_buf, size_t out_buf_size) {
 int main(void) {
   setbuf(stdout, NULL);
 
-  while (1) {
+  for (;;) {
     printf("$ ");
 
     char buf[USER_INPUT_BUF_SIZE];
@@ -233,7 +280,7 @@ int main(void) {
     default:
       char path_buf[4096];
       if (find_in_path(argv[0], path_buf, sizeof(path_buf))) {
-        int status = run_external(argv);
+        int status = run_external(argc, argv);
         if (status == -1) {
           printf("something went wrong");
         }
